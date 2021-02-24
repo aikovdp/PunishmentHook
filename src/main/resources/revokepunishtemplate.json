@@ -1,0 +1,21 @@
+{
+  "embeds": [ {
+    "color": "%color%",
+    "author": {
+      "name": "%name%'s %action% has been revoked",
+      "icon_url": "https://crafatar.com/avatars/%uuid%?overlay"
+    },
+    "fields": [
+      {
+        "name": "Original Reason",
+        "value": "%reason%",
+        "inline": true
+      }
+    ],
+    "footer": {
+      "text": "Punishment revoked",
+      "icon_url": "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/2696.png"
+    },
+    "timestamp": "%time%"
+  } ]
+}

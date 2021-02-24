@@ -1,0 +1,39 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+}
+
+apply plugin: 'java'
+
+group = 'me.aikovdp'
+version = '1.0'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    compileOnly 'net.md-5:bungeecord-api:1.16-R0.4'
+    compileOnly 'me.leoko.advancedban:AdvancedBan:2.1.7'
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+}
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter ReplaceTokens, tokens: [version: version]
+    }
+}
