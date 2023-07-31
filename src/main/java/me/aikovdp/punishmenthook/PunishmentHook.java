@@ -7,7 +7,6 @@ import me.leoko.advancedban.utils.Punishment;
 import me.leoko.advancedban.utils.PunishmentType;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.scheduler.TaskScheduler;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -132,43 +131,54 @@ public final class PunishmentHook extends Plugin implements Listener {
 
         String action;
         switch (type) {
-            case BAN:
+            case BAN -> {
                 action = revoke ? "ban" : "banned";
-                if (!revoke) {color = 0xFF0000;}
-                break;
-            case TEMP_BAN:
+                if (!revoke) {
+                    color = 0xFF0000;
+                }
+            }
+            case TEMP_BAN -> {
                 action = revoke ? "temporary ban" : "temporarily banned";
-                if (!revoke) {color = 0xFF0000;}
-                break;
-            case IP_BAN:
+                if (!revoke) {
+                    color = 0xFF0000;
+                }
+            }
+            case IP_BAN -> {
                 action = revoke ? "IP ban" : "IP banned";
-                if (!revoke) {color = 0xFF0000;}
-                break;
-            case TEMP_IP_BAN:
+                if (!revoke) {
+                    color = 0xFF0000;
+                }
+            }
+            case TEMP_IP_BAN -> {
                 action = revoke ? "temporary IP ban" : "temporarily IP banned";
-                if (!revoke) {color = 0xFF0000;}
-                break;
-            case KICK:
+                if (!revoke) {
+                    color = 0xFF0000;
+                }
+            }
+            case KICK -> {
                 action = revoke ? "kick" : "kicked";
-                if (!revoke) {color = 0xFF7F00;}
-                break;
-            case MUTE:
+                if (!revoke) {
+                    color = 0xFF7F00;
+                }
+            }
+            case MUTE -> {
                 action = revoke ? "mute" : "muted";
-                if (!revoke) {color = 0xFF7F00;}
-                break;
-            case TEMP_MUTE:
+                if (!revoke) {
+                    color = 0xFF7F00;
+                }
+            }
+            case TEMP_MUTE -> {
                 action = revoke ? "temporary mute" : "temporarily muted";
-                if (!revoke) {color = 0xFF7F00;}
-                break;
-            case WARNING:
-                action = revoke ? "warning" : "warned";
-                break;
-            case TEMP_WARNING:
-                action = revoke ? "temporary warning" : "temporarily warned";
-                break;
-            default:
+                if (!revoke) {
+                    color = 0xFF7F00;
+                }
+            }
+            case WARNING -> action = revoke ? "warning" : "warned";
+            case TEMP_WARNING -> action = revoke ? "temporary warning" : "temporarily warned";
+            default -> {
                 action = revoke ? "punishment" : "punished";
                 log.warning("Unknown punishment!");
+            }
         }
 
         if (revoke) {color = 0x00FF00;}
