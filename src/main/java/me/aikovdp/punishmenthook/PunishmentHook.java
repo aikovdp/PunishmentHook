@@ -27,11 +27,11 @@ import java.util.logging.Logger;
 
 public final class PunishmentHook extends Plugin implements Listener {
 
-    public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
-    static String punishTemplate;
-    static String revokePunishTemplate;
-    public final OkHttpClient client = new OkHttpClient();
-    String webhookUrl;
+    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    private static String punishTemplate;
+    private static String revokePunishTemplate;
+    private final OkHttpClient client = new OkHttpClient();
+    private String webhookUrl;
     private Logger log;
 
     @Override
