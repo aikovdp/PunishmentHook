@@ -1,10 +1,8 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 plugins {
-    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id("java")
+    id "com.github.johnrengelman.shadow" version "8.1.1"
 }
 
-apply plugin: 'java'
 
 group = 'me.aikovdp'
 version = '1.0'
@@ -21,19 +19,31 @@ repositories {
     maven {
         url "https://plugins.gradle.org/m2/"
     }
-    flatDir {
-        dirs 'libs'
+    maven {
+        url "https://jitpack.io"
+    }
+    maven {
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url = "https://hub.spigotmc.org/nexus/content/groups/public/"
     }
 }
 
 dependencies {
-    compileOnly 'net.md-5:bungeecord-api:1.16-R0.4'
-    compileOnly 'me.leoko.advancedban:AdvancedBan:2.1.7'
+    compileOnly 'io.github.waterfallmc:waterfall-api:1.19-R0.1-SNAPSHOT'
+    compileOnly ('com.github.DevLeoko:AdvancedBan:2.3.0') {
+        exclude(module: "AdvancedBan-Bukkit")
+        exclude(module: "AdvancedBan-Bungee")
+    }
     implementation("com.squareup.okhttp3:okhttp:4.9.0")
 }
 
 processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        filter ReplaceTokens, tokens: [version: version]
+    def props = ["version": version]
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching("plugin.yml") {
+        expand(props)
     }
 }
