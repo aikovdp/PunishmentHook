@@ -19,9 +19,9 @@ import okhttp3.RequestBody;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,30 +40,23 @@ public final class PunishmentHook extends Plugin implements Listener {
     public void onEnable() {
         log = getLogger();
         getProxy().getPluginManager().registerListener(this, this);
+        try {
+            punishTemplate =
+                    Resources.toString(Resources.getResource("punishtemplate.json"), StandardCharsets.UTF_8);
+            revokePunishTemplate =
+                    Resources.toString(Resources.getResource("revokepunishtemplate.json"), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.severe("Unable to load punishment webhook template!");
+        }
 
-        URL punishTemplateURL = getClass().getClassLoader().getResource("punishtemplate.json");
-        URL revokePunishTemplateURL = getClass().getClassLoader().getResource("revokepunishtemplate.json");
-        if (punishTemplateURL != null && revokePunishTemplateURL != null) {
-            try {
-                punishTemplate = Resources.toString(punishTemplateURL, StandardCharsets.UTF_8);
-                revokePunishTemplate = Resources.toString(revokePunishTemplateURL, StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                log.severe("Unable to load punishment webhook template!");
-                e.printStackTrace();
-            }
-        } else {log.severe("Unable to load punishment webhook template!");}
 
-        // Create config
-        if (!getDataFolder().exists())
-            getDataFolder().mkdir();
-
-        File file = new File(getDataFolder(), "config.yml");
-
-        if (!file.exists()) {
+        Path configPath = getDataFolder().toPath().resolve("config.yml");
+        if (!Files.exists(configPath)) {
             try (InputStream in = getResourceAsStream("config.yml")) {
-                Files.copy(in, file.toPath());
+                Files.createDirectories(configPath);
+                Files.copy(in, configPath);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.severe("Unable to create config!");
             }
         }
 
@@ -78,7 +71,6 @@ public final class PunishmentHook extends Plugin implements Listener {
             }
         } catch (IOException e) {
             log.severe("Unable to load config!");
-            e.printStackTrace();
         }
     }
 
@@ -90,7 +82,6 @@ public final class PunishmentHook extends Plugin implements Listener {
             executeWebhook(formattedWebhook, webhookUrl, client);
         } catch (IOException e) {
             log.severe("Unable to format webhook!");
-            e.printStackTrace();
         }
     }
 
@@ -102,7 +93,6 @@ public final class PunishmentHook extends Plugin implements Listener {
             executeWebhook(formattedWebhook, webhookUrl, client);
         } catch (IOException e) {
             log.severe("Unable to format webhook!");
-            e.printStackTrace();
         }
     }
 
@@ -112,7 +102,7 @@ public final class PunishmentHook extends Plugin implements Listener {
         try {
             client.newCall(request).execute();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.warning(e.getMessage());
         }
     }
 
