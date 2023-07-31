@@ -11,10 +11,8 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,11 +28,11 @@ import java.util.logging.Logger;
 public final class PunishmentHook extends Plugin implements Listener {
 
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
-    public final OkHttpClient client = new OkHttpClient();
-    String webhookUrl;
     static String punishTemplate;
     static String revokePunishTemplate;
-    private static Logger log;
+    public final OkHttpClient client = new OkHttpClient();
+    String webhookUrl;
+    private Logger log;
 
     @Override
     public void onEnable() {
@@ -96,17 +94,22 @@ public final class PunishmentHook extends Plugin implements Listener {
         }
     }
 
-    private static void executeWebhook(String webhook, String webhookURL, OkHttpClient client) {
+    private void executeWebhook(String webhook, String webhookURL, OkHttpClient client) {
         RequestBody body = RequestBody.create(webhook, JSON);
         Request request = new Request.Builder().url(webhookURL).post(body).build();
-        try {
-            client.newCall(request).execute();
-        } catch (IOException e) {
-            log.warning(e.getMessage());
-        }
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                log.warning("Unable to execute webhook: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
+            }
+        });
     }
 
-    private static String formatWebhook( Punishment punishment, boolean revoke) throws IOException {
+    private String formatWebhook(Punishment punishment, boolean revoke) throws IOException {
         String template = revoke ? revokePunishTemplate : punishTemplate;
         PunishmentType type = punishment.getType();
         String name = punishment.getName();
@@ -171,7 +174,9 @@ public final class PunishmentHook extends Plugin implements Listener {
             }
         }
 
-        if (revoke) {color = 0x00FF00;}
+        if (revoke) {
+            color = 0x00FF00;
+        }
 
         return template
                 .replaceAll("%name%", name)
