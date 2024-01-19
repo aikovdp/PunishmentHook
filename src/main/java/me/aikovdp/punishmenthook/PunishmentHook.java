@@ -11,32 +11,33 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Logger;
 
 public final class PunishmentHook extends Plugin implements Listener {
-
-    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static String punishTemplate;
     private static String revokePunishTemplate;
-    private final OkHttpClient client = new OkHttpClient();
     private String webhookUrl;
     private Logger log;
 
+    private final HttpClient client = HttpClient.newHttpClient();
+
     @Override
     public void onEnable() {
-        log = getLogger();
+        log = getSLF4JLogger();
         getProxy().getPluginManager().registerListener(this, this);
         try {
             punishTemplate =
@@ -44,7 +45,7 @@ public final class PunishmentHook extends Plugin implements Listener {
             revokePunishTemplate =
                     Resources.toString(Resources.getResource("revokepunishtemplate.json"), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.severe("Unable to load punishment webhook template!");
+            log.error("Unable to load punishment webhook template!");
         }
 
 
@@ -54,7 +55,7 @@ public final class PunishmentHook extends Plugin implements Listener {
                 Files.createDirectories(configPath);
                 Files.copy(in, configPath);
             } catch (IOException e) {
-                log.severe("Unable to create config!");
+                log.error("Unable to create config!");
             }
         }
 
@@ -64,52 +65,43 @@ public final class PunishmentHook extends Plugin implements Listener {
             configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
             webhookUrl = configuration.getString("webhookUrl");
             if (webhookUrl.isEmpty()) {
-                log.severe("No webhook URL found! Disabling..");
+                log.error("No webhook URL found! Disabling..");
                 getProxy().getPluginManager().unregisterListeners(this);
             }
         } catch (IOException e) {
-            log.severe("Unable to load config!");
+            log.error("Unable to load config!");
         }
     }
 
     @EventHandler
     public void onPunishmentEvent(PunishmentEvent event) {
-        String formattedWebhook;
-        try {
-            formattedWebhook = formatWebhook(event.getPunishment(), false);
-            executeWebhook(formattedWebhook, webhookUrl, client);
-        } catch (IOException e) {
-            log.severe("Unable to format webhook!");
-        }
+        executeWebhook(
+                formatWebhook(event.getPunishment(), false),
+                webhookUrl
+        );
     }
 
     @EventHandler
     public void onPunishmentEvent(RevokePunishmentEvent event) {
-        String formattedWebhook;
-        try {
-            formattedWebhook = formatWebhook(event.getPunishment(), true);
-            executeWebhook(formattedWebhook, webhookUrl, client);
-        } catch (IOException e) {
-            log.severe("Unable to format webhook!");
-        }
+        executeWebhook(
+                formatWebhook(event.getPunishment(), true),
+                webhookUrl
+        );
     }
 
-    private void executeWebhook(String webhook, String webhookURL, OkHttpClient client) {
-        RequestBody body = RequestBody.create(webhook, JSON);
-        Request request = new Request.Builder().url(webhookURL).post(body).build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                log.warning("Unable to execute webhook: " + e.getMessage());
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) {
-            }
+    private void executeWebhook(String webhook, String webhookURL) {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(webhookURL))
+                .POST(HttpRequest.BodyPublishers.ofString(webhook))
+                .build();
+        client.sendAsync(req, HttpResponse.BodyHandlers.discarding())
+        .exceptionally(ex -> {
+                log.error("Unable to execute webhook", ex);
+                return null;
         });
     }
 
-    private String formatWebhook(Punishment punishment, boolean revoke) throws IOException {
+    private String formatWebhook(Punishment punishment, boolean revoke) {
         String template = revoke ? revokePunishTemplate : punishTemplate;
         PunishmentType type = punishment.getType();
         String name = punishment.getName();
@@ -170,7 +162,7 @@ public final class PunishmentHook extends Plugin implements Listener {
             case TEMP_WARNING -> action = revoke ? "temporary warning" : "temporarily warned";
             default -> {
                 action = revoke ? "punishment" : "punished";
-                log.warning("Unknown punishment!");
+                log.error("Unknown punishment!");
             }
         }
 

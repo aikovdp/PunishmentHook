@@ -24,7 +24,6 @@ dependencies {
         exclude(module = "AdvancedBan-Bukkit")
         exclude(module = "AdvancedBan-Bungee")
     }
-    implementation("com.squareup.okhttp3:okhttp:4.9.0")
 }
 
 tasks {
