@@ -20,11 +20,17 @@ public class WebhookExecutor {
     public void execute(String webhook) {
         var req = HttpRequest.newBuilder()
                 .uri(webhookUri)
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(webhook))
                 .build();
 
-        client.sendAsync(req, HttpResponse.BodyHandlers.discarding()).exceptionally(ex -> {
-            logger.error("Unable to execute webhook", ex);
+        client.sendAsync(req, HttpResponse.BodyHandlers.ofString()).handle((res, ex) -> {
+            if (ex != null) {
+                logger.error("Unable to execute webhook", ex);
+            }
+            if (res.statusCode() < 200 || res.statusCode() >= 300) {
+                logger.error("Webhook execution returned status {}: {}", res.statusCode(), res.body());
+            }
             return null;
         });
     }
