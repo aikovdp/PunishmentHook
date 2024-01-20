@@ -1,12 +1,9 @@
 package me.aikovdp.punishmenthook;
 
-import com.google.common.io.Resources;
 import me.leoko.advancedban.utils.Punishment;
 import me.leoko.advancedban.utils.PunishmentType;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,15 +15,13 @@ public class PunishmentRenderer {
     private final Logger logger;
 
     public PunishmentRenderer(
+            String punishTemplate,
+            String revokeTemplate,
             Logger logger
-    ) throws IOException {
+    ) {
         this.logger = logger;
-
-            punishTemplate =
-                    Resources.toString(Resources.getResource("punishtemplate.json"), StandardCharsets.UTF_8);
-            revokeTemplate =
-                    Resources.toString(Resources.getResource("revokepunishtemplate.json"), StandardCharsets.UTF_8);
-
+        this.punishTemplate = punishTemplate;
+        this.revokeTemplate = revokeTemplate;
     }
 
     String render(Punishment punishment, boolean revoke) {

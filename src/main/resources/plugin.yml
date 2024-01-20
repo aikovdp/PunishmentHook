@@ -1,5 +1,6 @@
 name: PunishmentHook
 author: Aikovdp
-version: @version@
+version: $version
 main: me.aikovdp.punishmenthook.PunishmentHook
 description: Sends discord webhooks when a punishment action is taken
+api-version: '1.19'
