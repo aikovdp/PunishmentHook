@@ -17,9 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +30,7 @@ public final class PunishmentHook extends Plugin implements Listener {
     private String webhookUrl;
     private Logger log;
 
-    private final HttpClient client = HttpClient.newHttpClient();
+    private WebhookExecutor webhookExecutor;
 
     @Override
     public void onEnable() {
@@ -71,34 +68,21 @@ public final class PunishmentHook extends Plugin implements Listener {
         } catch (IOException e) {
             log.error("Unable to load config!");
         }
+        webhookExecutor = new WebhookExecutor(URI.create(webhookUrl), this.getSLF4JLogger());
     }
 
     @EventHandler
     public void onPunishmentEvent(PunishmentEvent event) {
-        executeWebhook(
-                formatWebhook(event.getPunishment(), false),
-                webhookUrl
+        webhookExecutor.execute(
+                formatWebhook(event.getPunishment(), false)
         );
     }
 
     @EventHandler
     public void onPunishmentEvent(RevokePunishmentEvent event) {
-        executeWebhook(
-                formatWebhook(event.getPunishment(), true),
-                webhookUrl
+        webhookExecutor.execute(
+                formatWebhook(event.getPunishment(), true)
         );
-    }
-
-    private void executeWebhook(String webhook, String webhookURL) {
-        var req = HttpRequest.newBuilder()
-                .uri(URI.create(webhookURL))
-                .POST(HttpRequest.BodyPublishers.ofString(webhook))
-                .build();
-        client.sendAsync(req, HttpResponse.BodyHandlers.discarding())
-        .exceptionally(ex -> {
-                log.error("Unable to execute webhook", ex);
-                return null;
-        });
     }
 
     private String formatWebhook(Punishment punishment, boolean revoke) {
