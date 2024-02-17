@@ -3,7 +3,7 @@
     "color": "%color%",
     "author": {
       "name": "%name%'s %action% has been revoked",
-      "icon_url": "https://crafatar.com/avatars/%uuid%?overlay"
+      "icon_url": "https://crafthead.net/helm/%uuid%"
     },
     "fields": [
       {
